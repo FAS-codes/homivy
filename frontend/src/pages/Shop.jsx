@@ -1,32 +1,28 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import api from "../api.js";
+import { fetchProducts, CATEGORIES, catBySlug } from "../shopify.js";
 import ProductCard from "../components/ProductCard.jsx";
 
 export default function Shop() {
   const [params, setParams] = useSearchParams();
   const cat = params.get("cat") || "all";
-  const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [sort, setSort] = useState("featured");
 
   useEffect(() => {
-    api.get("/categories").then((res) => setCategories(res.data.categories));
-  }, []);
-
-  useEffect(() => {
     setLoading(true);
     const t = setTimeout(() => {
-      api.get("/products", { params: { category: cat, q, sort, limit: 48 } })
-        .then((res) => setProducts(res.data.products))
+      fetchProducts({ category: cat, q, sort })
+        .then(setProducts)
+        .catch(() => setProducts([]))
         .finally(() => setLoading(false));
-    }, q ? 250 : 0);
+    }, q ? 300 : 0);
     return () => clearTimeout(t);
   }, [cat, q, sort]);
 
-  const active = categories.find((c) => c.slug === cat);
+  const active = catBySlug(cat);
 
   return (
     <>
@@ -43,7 +39,7 @@ export default function Shop() {
           <div className="shop-toolbar">
             <div className="filter-chips">
               <button className={`chip ${cat === "all" ? "active" : ""}`} onClick={() => setParams({})}>All Products</button>
-              {categories.map((c) => (
+              {CATEGORIES.map((c) => (
                 <button key={c.slug} className={`chip ${cat === c.slug ? "active" : ""}`} onClick={() => setParams({ cat: c.slug })}>
                   {c.name}
                 </button>
@@ -56,7 +52,6 @@ export default function Shop() {
                 <option value="newest">Newest</option>
                 <option value="price-asc">Price: Low to High</option>
                 <option value="price-desc">Price: High to Low</option>
-                <option value="rating">Top Rated</option>
                 <option value="name">Name: A–Z</option>
               </select>
             </div>

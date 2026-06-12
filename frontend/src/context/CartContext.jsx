@@ -1,50 +1,64 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { cartApi } from "../shopify.js";
 
 const CartContext = createContext(null);
 export const useCart = () => useContext(CartContext);
 
 export const FREE_SHIP_THRESHOLD = 25;
-export const SHIPPING_PRICE = 3.49;
 
 export function CartProvider({ children }) {
-  const [items, setItems] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("homivy-cart") || "[]"); }
-    catch { return []; }
-  });
+  const [cart, setCart] = useState(null);
+  const [busy, setBusy] = useState(false);
 
+  // restore existing Shopify cart on load
   useEffect(() => {
-    localStorage.setItem("homivy-cart", JSON.stringify(items));
-  }, [items]);
+    const id = localStorage.getItem("homivy-cart-id");
+    if (!id) return;
+    cartApi.fetch(id)
+      .then((c) => (c ? setCart(c) : localStorage.removeItem("homivy-cart-id")))
+      .catch(() => localStorage.removeItem("homivy-cart-id"));
+  }, []);
 
-  // product: { _id, slug, title, image, price, stock }
-  const add = (product, qty = 1) =>
-    setItems((prev) => {
-      const existing = prev.find((i) => i._id === product._id);
-      if (existing) {
-        return prev.map((i) =>
-          i._id === product._id ? { ...i, qty: Math.min(i.qty + qty, product.stock ?? 99) } : i
-        );
-      }
-      return [...prev, {
-        _id: product._id, slug: product.slug, title: product.title,
-        image: product.images?.[0] || product.image || "", price: product.price,
-        stock: product.stock ?? 99, qty: Math.min(qty, product.stock ?? 99),
-      }];
-    });
+  const ensureCart = async () => {
+    if (cart) return cart;
+    const c = await cartApi.create();
+    localStorage.setItem("homivy-cart-id", c.id);
+    setCart(c);
+    return c;
+  };
 
-  const setQty = (id, qty) =>
-    setItems((prev) =>
-      qty <= 0 ? prev.filter((i) => i._id !== id)
-        : prev.map((i) => (i._id === id ? { ...i, qty: Math.min(qty, i.stock) } : i))
-    );
+  const add = async (variantId, qty = 1) => {
+    setBusy(true);
+    try {
+      const c = await ensureCart();
+      const updated = await cartApi.addLine(c.id, variantId, qty);
+      setCart(updated);
+      return updated;
+    } finally { setBusy(false); }
+  };
 
-  const clear = () => setItems([]);
-  const count = items.reduce((s, i) => s + i.qty, 0);
-  const subtotal = Math.round(items.reduce((s, i) => s + i.price * i.qty, 0) * 100) / 100;
-  const shipping = items.length === 0 || subtotal >= FREE_SHIP_THRESHOLD ? 0 : SHIPPING_PRICE;
+  const setLineQty = async (lineId, qty) => {
+    if (!cart) return;
+    setBusy(true);
+    try {
+      const updated = qty <= 0
+        ? await cartApi.removeLine(cart.id, lineId)
+        : await cartApi.updateLine(cart.id, lineId, qty);
+      setCart(updated);
+    } finally { setBusy(false); }
+  };
+
+  const checkout = () => {
+    if (cart?.checkoutUrl) window.location.href = cart.checkoutUrl;
+  };
 
   return (
-    <CartContext.Provider value={{ items, add, setQty, clear, count, subtotal, shipping }}>
+    <CartContext.Provider value={{
+      cart, busy, add, setLineQty, checkout,
+      count: cart?.count || 0,
+      subtotal: cart?.subtotal || 0,
+      lines: cart?.lines || [],
+    }}>
       {children}
     </CartContext.Provider>
   );

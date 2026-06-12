@@ -810,3 +810,16 @@ input:focus, select:focus, textarea:focus { border-color: var(--pine); box-shado
 .review-top { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
 .review-body .stars { color: var(--amber); letter-spacing: 2px; font-size: 13px; }
 .review-body p { margin: 8px 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.6; }
+
+/* ============ variant picker ============ */
+.variant-block { margin-bottom: 20px; }
+.variant-label { display: block; font: 600 12px/1 var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
+.variant-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.variant-btn {
+  padding: 11px 18px; border-radius: 999px; border: 1.5px solid var(--line);
+  background: var(--surface); font: 600 13px/1 var(--font-display); color: var(--ink-2);
+  transition: all 0.25s var(--ease);
+}
+.variant-btn:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); }
+.variant-btn.active { background: var(--pine); border-color: var(--pine); color: #fff; }
+.variant-btn.sold-out { opacity: 0.45; cursor: not-allowed; text-decoration: line-through; }
