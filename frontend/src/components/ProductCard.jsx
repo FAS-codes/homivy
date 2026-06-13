@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { money } from "../shopify.js";
 import { useCart } from "../context/CartContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
+import { addToCart as pixelAddToCart } from "../pixel.js";
 
 export default function ProductCard({ product }) {
   const { add } = useCart();
@@ -16,6 +17,7 @@ export default function ProductCard({ product }) {
     if (!singleVariant) return navigate(`/product/${product.slug}`);
     try {
       await add(product.variants[0].id);
+      pixelAddToCart(product);
       toast(`${product.title} added to cart`);
     } catch (err) { toast(err.message, "error"); }
   };

@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { pageView } from "./pixel.js";
 import Header from "./components/Header.jsx";
 import Footer from "./components/Footer.jsx";
 import Home from "./pages/Home.jsx";
@@ -10,7 +11,10 @@ import Wishlist from "./pages/Wishlist.jsx";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
-  useEffect(() => window.scrollTo(0, 0), [pathname]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    pageView();
+  }, [pathname]);
   return null;
 }
 

@@ -5,6 +5,7 @@ import { useCart } from "../context/CartContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import ProductCard from "../components/ProductCard.jsx";
 import { isWished, toggleWish } from "../wishlist.js";
+import { viewContent, addToCart as pixelAddToCart } from "../pixel.js";
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -26,6 +27,7 @@ export default function ProductDetail() {
         setProduct(p);
         setVariantId((p.variants.find((v) => v.available) || p.variants[0])?.id);
         setWished(isWished(p.slug));
+        viewContent(p);
         const rel = await fetchProducts({ category: p.category.slug, first: 5 });
         setRelated(rel.filter((x) => x.slug !== p.slug).slice(0, 4));
       })
@@ -57,6 +59,7 @@ export default function ProductDetail() {
   const addToCart = async () => {
     try {
       await add(variantId, qty);
+      pixelAddToCart({ slug: product.slug, title: product.title, price }, qty);
       toast(`${product.title} added to cart`);
     } catch (err) { toast(err.message, "error"); }
   };

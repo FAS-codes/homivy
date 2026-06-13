@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { cartApi } from "../shopify.js";
+import { initiateCheckout } from "../pixel.js";
 
 const CartContext = createContext(null);
 export const useCart = () => useContext(CartContext);
@@ -49,7 +50,10 @@ export function CartProvider({ children }) {
   };
 
   const checkout = () => {
-    if (cart?.checkoutUrl) window.location.href = cart.checkoutUrl;
+    if (cart?.checkoutUrl) {
+      initiateCheckout(cart.subtotal, cart.count);
+      window.location.href = cart.checkoutUrl;
+    }
   };
 
   return (
