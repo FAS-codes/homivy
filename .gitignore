@@ -31,3 +31,4 @@ frontend/dist/
 *.log
 .claude/settings.local.json
 .vercel
+.claude/
