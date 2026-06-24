@@ -100,7 +100,6 @@ export default function ProductDetail() {
                 <span className="pdp-price">{money(price)}</span>
                 {save > 0 && <><span className="pdp-compare">{money(compare)}</span><span className="p-save">Save {save}%</span></>}
               </div>
-              <p className="pdp-short">{product.description}</p>
 
               {hasVariants && (
                 <div className="variant-block">
@@ -140,6 +139,10 @@ export default function ProductDetail() {
                 <span>✓ Free shipping over £25</span>
                 <span>✓ Secure Shopify checkout</span>
                 <span>✓ 30-day returns</span>
+              </div>
+              <div className="pdp-details">
+                <h3>Product details</h3>
+                <p className="pdp-short">{product.description}</p>
               </div>
             </div>
           </div>
